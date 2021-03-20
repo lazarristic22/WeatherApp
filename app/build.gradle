@@ -116,5 +116,8 @@ dependencies {
         implementation "com.google.maps.android:maps-utils-ktx:2.4.0"
         implementation "com.google.android.gms:play-services-maps:17.0.0"
         implementation "com.google.android.gms:play-services-location:18.0.0"
+
+        //RecyclerView
+        implementation "androidx.recyclerview:recyclerview:1.2.0-beta02"
     }
 }

@@ -17,13 +17,13 @@ import javax.inject.Inject
 class HomeViewModel @Inject constructor(private val cityRepository: CityRepository) : ViewModel() {
 
     private val _citiesList = MutableLiveData<Result<CitiesResponse>>()
-    val movieList = _citiesList
+    val citiesList = _citiesList
 
     init {
-        fetchMovies()
+       fetchCities()
     }
 
-    private fun fetchMovies() {
+    private fun fetchCities() {
         viewModelScope.launch {
             cityRepository.fetchCities().collect {
                 _citiesList.value = it

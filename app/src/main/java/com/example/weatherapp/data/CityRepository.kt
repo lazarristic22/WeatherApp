@@ -1,6 +1,7 @@
 package com.example.weatherapp.data
 
 import  com.example.weatherapp.model.Result
+import  com.example.weatherapp.model.Error
 import com.example.weatherapp.data.local.CityDao
 import com.example.weatherapp.model.CitiesResponse
 import com.example.weatherapp.model.City
@@ -25,7 +26,11 @@ class CityRepository @Inject constructor(
 
     private fun fetchCitiesCached(): Result<CitiesResponse>? =
         cityDao.getAll()?.let {
-            Result.success(CitiesResponse(it))
+            if (it.isNotEmpty()) {
+                Result.success(CitiesResponse(it))
+            } else {
+                Result.error("No Cities Saved", Error(404))
+            }
         }
 
     suspend fun insertCity(city: City) {
