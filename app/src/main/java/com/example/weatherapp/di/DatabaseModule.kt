@@ -1,8 +1,10 @@
 package com.example.weatherapp.di
 
 import android.content.Context
+import android.util.Log
 import androidx.room.Room
 import com.example.weatherapp.data.local.AppDatabase
+import com.example.weatherapp.data.local.CityDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -17,15 +19,19 @@ object DatabaseModule {
     @Provides
     @Singleton
     fun provideAppDatabase(@ApplicationContext appContext: Context): AppDatabase {
+
+        Log.i("BOBAN","BUILDING DATABASE")
+
         return Room.databaseBuilder(
             appContext,
             AppDatabase::class.java,
             "app.db"
         ).build()
+
     }
-//Provide My Dao's here
-//    @Provides
-//    fun provideMovieDao(appDatabase: AppDatabase): MovieDao {
-//        return appDatabase.movieDao()
-//    }
+
+    @Provides
+    fun provideMovieDao(appDatabase: AppDatabase): CityDao {
+        return appDatabase.cityDao()
+    }
 }
