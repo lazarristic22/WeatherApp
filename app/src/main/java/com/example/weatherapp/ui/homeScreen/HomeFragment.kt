@@ -4,18 +4,20 @@ import android.location.Geocoder
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
-import  com.example.weatherapp.model.Result
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DividerItemDecoration
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.weatherapp.databinding.HomeFragmentBinding
 import com.example.weatherapp.model.City
 import com.example.weatherapp.ui.adapters.CityListAdapter
-import com.example.weatherapp.ui.CityClusterItem
+import com.example.weatherapp.utils.CityClusterItem
+import com.example.weatherapp.utils.SwipeToDelete
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.MapsInitializer
 import com.google.android.gms.maps.OnMapReadyCallback
@@ -41,39 +43,26 @@ class HomeFragment : Fragment() {
 
     private fun setupAdapter() {
         cityAdapter = CityListAdapter()
+        cityAdapter.onClickListener = { city ->
+            val action = HomeFragmentDirections.actionHomeFragmentToCityFragment(city)
+            findNavController().navigate(action)
+        }
+        cityAdapter.onSwipeDelete = { city ->
+            homeViewModel.deleteCity(city)
+        }
     }
 
+
     private fun setupObservers() {
-        homeViewModel.citiesList.observe(viewLifecycleOwner, { result ->
-            when (result.status) {
-                Result.Status.SUCCESS -> {
-                    googleMapInstance?.let {
-                        it.clear()
-                        clusterManager.clearItems()
-                    }
-                    var clusterItemList: List<CityClusterItem>
-                    result.data?.results?.let { list ->
-                        binding.cityRecycler.adapter = cityAdapter
-                        cityAdapter.submitList(null)
-                        cityAdapter.submitList(list)
-                        clusterItemList = list.map {
-                            CityClusterItem(it)
-                        }
-                        clusterManager.addItems(clusterItemList)
-                        clusterManager.cluster()
-                    }
-                }
-
-                Result.Status.ERROR -> {
-                    result.message?.let {
-                        Toast.makeText(context, "NO CITIES SAVED", Toast.LENGTH_SHORT).show()
-                    }
-                }
-
-                Result.Status.LOADING -> {
-
-                }
+        homeViewModel.citiesList.observe(viewLifecycleOwner, { list ->
+            googleMapInstance.clear()
+            clusterManager.clearItems()
+            cityAdapter.submitList(list)
+            val clusterItemList: List<CityClusterItem> = list.map {
+                CityClusterItem(it)
             }
+            clusterManager.addItems(clusterItemList)
+            clusterManager.cluster()
         })
     }
 
@@ -82,34 +71,55 @@ class HomeFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         binding = HomeFragmentBinding.inflate(inflater, container, false)
-        setUpViews(savedInstanceState)
-        setupObservers()
+        setupMap(savedInstanceState)
+        setUpViews()
         return binding.root
     }
 
-    private fun setUpViews(savedInstanceState: Bundle?) {
-        binding.googleMapView.onCreate(savedInstanceState)
-        binding.googleMapView.onResume()
-        try {
-            MapsInitializer.initialize(context)
-        } catch (e: Exception) {
-            Log.e("MAP_EXCEPTION", e.message.toString())
-        }
-        binding.googleMapView.getMapAsync(mapCallbacks)
-        cityAdapter = CityListAdapter()
-
-        binding.cityRecycler.layoutManager = LinearLayoutManager(context)
-        binding.cityRecycler.adapter = cityAdapter
-        binding.cityRecycler.addItemDecoration(
-            DividerItemDecoration(
-                this.context,
-                DividerItemDecoration.VERTICAL
-            )
-        )
+    private fun setUpViews() {
+        setupRecycler()
     }
+
+    private fun setupMap(savedInstanceState: Bundle?) {
+        with(binding.googleMapView) {
+            onCreate(savedInstanceState)
+            onResume()
+            try {
+                MapsInitializer.initialize(context)
+            } catch (e: Exception) {
+                Log.e("MAP_EXCEPTION", e.message.toString())
+            }
+            getMapAsync(mapCallbacks)
+        }
+    }
+
+    private fun setupRecycler() {
+        with(binding.cityRecycler) {
+            val linearLayoutManager = LinearLayoutManager(context)
+            linearLayoutManager.reverseLayout = true
+            linearLayoutManager.stackFromEnd = true
+            binding.cityRecycler.layoutManager = linearLayoutManager
+            binding.cityRecycler.adapter = cityAdapter
+            binding.cityRecycler.addItemDecoration(
+                DividerItemDecoration(
+                    this.context,
+                    DividerItemDecoration.VERTICAL
+                )
+            )
+            val itemTouchHelper = ItemTouchHelper(SwipeToDelete(cityAdapter))
+            itemTouchHelper.attachToRecyclerView(this)
+        }
+
+    }
+
+    /**
+     *  [mapCallbacks] is used for map functionality like [OnMapReadyCallback] which sets
+     *  googleMapInstance
+     */
 
     private val mapCallbacks = OnMapReadyCallback { googleMap ->
         googleMapInstance = googleMap
+        googleMapInstance.clear()
         googleMapInstance.setOnMapLongClickListener(onMapClickListener)
 
         clusterManager = ClusterManager(context, googleMap)
@@ -120,26 +130,32 @@ class HomeFragment : Fragment() {
 
         googleMap.setOnCameraIdleListener(clusterManager)
         googleMap.setOnMarkerClickListener(clusterManager)
+        setupObservers()
     }
 
+    /**
+     *  Here I call only the first address from the GeoCoder even though there could be more
+     */
     private val onMapClickListener = GoogleMap.OnMapLongClickListener { latitudeLongitude ->
         val geoCoder = Geocoder(context)
         try {
-            val adressList =
+            val addressList =
                 geoCoder.getFromLocation(
                     latitudeLongitude.latitude,
                     latitudeLongitude.longitude,
                     1
                 )
-            adressList.first()?.let { address ->
+            addressList.first()?.let { address ->
                 val cityName = address.subAdminArea
                 val city =
                     City(0, cityName, latitudeLongitude.latitude, latitudeLongitude.longitude)
-                homeViewModel.insertCity(city)
-                googleMapInstance.addMarker(MarkerOptions().position(latitudeLongitude))
+                cityName?.let {
+                    homeViewModel.insertCity(city)
+                    googleMapInstance.addMarker(MarkerOptions().position(latitudeLongitude))
+                }
             }
         } catch (e: Exception) {
-            Toast.makeText(context, "There is not city there", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "There is no city there", Toast.LENGTH_SHORT).show()
             Log.e("ERROR_TAG", e.message.toString())
         }
     }

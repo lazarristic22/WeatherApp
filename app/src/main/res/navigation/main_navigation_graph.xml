@@ -8,7 +8,7 @@
         android:id="@+id/homeFragment"
         android:name="com.example.weatherapp.ui.homeScreen.HomeFragment"
         android:label="home_fragment"
-        tools:layout="@layout/home_fragment" >
+        tools:layout="@layout/home_fragment">
         <action
             android:id="@+id/action_homeFragment_to_cityFragment"
             app:destination="@id/cityFragment" />
@@ -20,7 +20,12 @@
         android:id="@+id/cityFragment"
         android:name="com.example.weatherapp.ui.cityScreen.CityFragment"
         android:label="city_fragment"
-        tools:layout="@layout/city_fragment" />
+        tools:layout="@layout/city_fragment" >
+        <argument
+            android:name="city"
+            app:argType="com.example.weatherapp.model.City" />
+    </fragment>
+
     <fragment
         android:id="@+id/helpFragment"
         android:name="com.example.weatherapp.ui.helpScreen.HelpFragment"

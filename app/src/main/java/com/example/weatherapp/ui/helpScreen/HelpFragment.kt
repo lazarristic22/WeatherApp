@@ -1,5 +1,6 @@
 package com.example.weatherapp.ui.helpScreen
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -12,6 +13,10 @@ import androidx.fragment.app.Fragment
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.example.weatherapp.databinding.HelpFragmentBinding
 
+/**
+ *  I Didn't have enough time to build a website so i linked the one of your company, also the
+ *  loading on swipe is flaky.
+ */
 class HelpFragment : Fragment() {
 
     private lateinit var binding: HelpFragmentBinding
@@ -52,19 +57,18 @@ class HelpFragment : Fragment() {
         }
     }
 
+    @SuppressLint("SetJavaScriptEnabled")
     private fun setUpViews() {
         binding.webView.canGoBackOrForward(20)
-        binding.webView.settings.apply {
+        with(binding.webView.settings) {
             // I enabled this here so i could route to your site that requires JS
             javaScriptEnabled = true
             allowFileAccess = true
             domStorageEnabled = true
             allowContentAccess = true
-            allowFileAccessFromFileURLs=true
-            setAppCacheEnabled(true)
             cacheMode = WebSettings.LOAD_NO_CACHE
-
         }
+
         binding.webView.setLayerType(View.LAYER_TYPE_HARDWARE, null)
         binding.webView.loadUrl(URL)
         binding.swipeRefreshLayout.setOnRefreshListener {

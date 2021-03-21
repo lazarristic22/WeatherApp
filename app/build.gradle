@@ -21,6 +21,10 @@ android {
 
         resValue "string", "google_maps_key",
                 (project.findProperty("GOOGLE_API_KEY") ?: "")
+
+        //Didn't get how to insert the api key by this method
+        buildConfigField "String", "weather_key", "\"{eadfece3da874d6913eb9b3093f2e92e}\""
+
     }
 
     buildFeatures {
@@ -41,6 +45,8 @@ android {
         jvmTarget = '1.8'
     }
 }
+
+apply plugin: "androidx.navigation.safeargs.kotlin"
 
 dependencies {
 
@@ -63,7 +69,6 @@ dependencies {
         def glide_version = "4.11.0"
         def fragment_version = "1.3.1"
         def retrofit_version = "2.9.0"
-        def navigation_version = "2.3.4"
 
         implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
         implementation 'androidx.core:core-ktx:1.3.2'
@@ -96,10 +101,6 @@ dependencies {
         //Coroutines
         implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.4.3"
 
-        //Glide
-        implementation "com.github.bumptech.glide:glide:$glide_version"
-        kapt "com.github.bumptech.glide:compiler:$glide_version"
-
         //Fragment extension, so i can use "by viewModels in Fragments"
         implementation "androidx.fragment:fragment-ktx:$fragment_version"
 
@@ -119,5 +120,8 @@ dependencies {
 
         //RecyclerView
         implementation "androidx.recyclerview:recyclerview:1.2.0-beta02"
+
+        //Stetho is curently broken on latest version of Chrome
+        implementation "com.facebook.stetho:stetho:1.5.1"
     }
 }

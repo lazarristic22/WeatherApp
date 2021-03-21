@@ -1,12 +1,9 @@
 package com.example.weatherapp.ui.adapters
 
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
-
-
 import androidx.recyclerview.widget.RecyclerView
 import com.example.weatherapp.databinding.CityItemBinding
 import com.example.weatherapp.model.City
@@ -14,23 +11,41 @@ import com.example.weatherapp.model.City
 class CityListAdapter :
     ListAdapter<City, CityListAdapter.CityViewHolder>(CityAdapterDiffUtilItemCallback) {
 
+    var onClickListener: ((City) -> Unit)? = null
+    var onSwipeDelete: ((City) -> Unit)? = null
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CityViewHolder {
         val binding =
             CityItemBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-        Log.i("BOBAN", "CREATING VIEW HOLDER")
         return CityViewHolder(binding)
     }
 
     override fun onBindViewHolder(holder: CityViewHolder, position: Int) {
-        Log.i("BOBAN", "IN onBindViewHolder at position ${position}")
         val currentItem = getItem(position)
         holder.bind(currentItem)
     }
 
+    fun deleteItem(position: Int) {
+        onSwipeDelete?.invoke(currentList[position])
+    }
+
     inner class CityViewHolder(private val binding: CityItemBinding) :
         RecyclerView.ViewHolder(binding.root) {
+
+        private lateinit var boundCity: City
+
+        init {
+            setupOnClickListener()
+        }
+
+        private fun setupOnClickListener() {
+            itemView.setOnClickListener {
+                onClickListener?.invoke(boundCity)
+            }
+        }
+
         fun bind(city: City) {
-            Log.i("BOBAN", "I AM BINDING ${city.name}")
+            boundCity = city
             binding.textViewCityName.text = city.name
         }
     }

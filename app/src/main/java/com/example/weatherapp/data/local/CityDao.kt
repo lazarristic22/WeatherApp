@@ -2,15 +2,16 @@ package com.example.weatherapp.data.local
 
 import androidx.room.*
 import com.example.weatherapp.model.City
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface CityDao {
 
     @Query("SELECT * FROM city ")
-    fun getAll(): List<City>?
+    fun getAll(): Flow<List<City>>
 
     @Delete
-    fun delete(movie: City)
+    suspend fun delete(city: City)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(city: City): Long
